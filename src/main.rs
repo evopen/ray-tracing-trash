@@ -1,8 +1,10 @@
 mod ray;
 
-use glam::Vec3A as Vec3;
+use glam::Vec3 as Vec3;
 use ray::Ray;
 use rayon::prelude::*;
+
+type Color = Vec3;
 
 fn write_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3) {
     *pixel = image::Rgb([
@@ -12,9 +14,22 @@ fn write_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3) {
     ]);
 }
 
-fn ray_color(r: &ray::Ray) -> Vec3 {
+fn ray_color(r: &ray::Ray) -> Color {
+    if hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
     let unit_direction = r.direction().normalize();
-    Vec3::new(0.0, 0.0, 0.5)
+    let t = 0.5 * (unit_direction.y() + 1.0);
+    (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
+}
+
+fn hit_sphere(center: &Vec3, radius: f32, r: &Ray) -> bool {
+    let oc = Vec3::from(r.origin() - center.clone());
+    let a = r.direction().dot(r.direction());
+    let b = 2.0 * oc.dot(r.direction());
+    let c = oc.dot(oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    return discriminant > 0.0;
 }
 
 fn main() {
@@ -40,7 +55,7 @@ fn main() {
 
     img.enumerate_pixels_mut().for_each(|(x, y, pixel)| {
         let u = x as f32 / (image_width - 1) as f32;
-        let v = y as f32 / (image_height - 1) as f32;
+        let v = (image_height - y) as f32 / (image_height - 1) as f32;
         let r = Ray::new(
             origin,
             lower_left_corner + u * horizontal + v * vertical - origin,
