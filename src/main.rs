@@ -1,10 +1,14 @@
 mod ray;
+mod hittable;
 
 use glam::Vec3 as Vec3;
 use ray::Ray;
 use rayon::prelude::*;
 
+use hittable::sphere::Sphere;
+
 type Color = Vec3;
+type Point3 = Vec3;
 
 fn write_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3) {
     *pixel = image::Rgb([
