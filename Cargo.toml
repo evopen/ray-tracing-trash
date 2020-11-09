@@ -7,3 +7,16 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+image = "0.23.11"
+log = "0.4.11"
+env_logger = "0.8.1"
+rayon = "1.5.0"
+glam = "0.10.0"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
+lto = false
+incremental = false
