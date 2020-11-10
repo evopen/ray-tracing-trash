@@ -4,10 +4,11 @@ mod camera;
 mod hittable;
 mod ray;
 
-use glam::Vec3 as Vec3;
+use glam::Vec3;
 use rand::prelude::*;
 use ray::Ray;
 use rayon::prelude::*;
+use std::sync::{Arc, RwLock};
 
 use camera::Camera;
 use hittable::{HitRecord, Hittable, HittableList, Sphere};
@@ -38,8 +39,6 @@ fn ray_color(r: &ray::Ray, hittable: &dyn Hittable) -> Color {
 fn main() {
     env_logger::builder().format_timestamp(None).init();
 
-    let mut rng = rand::thread_rng();
-
     // Image
     let aspect_ratio = 16.0 / 9.0;
     let image_width: u32 = 400;
@@ -48,9 +47,15 @@ fn main() {
     let mut img: image::RgbImage = image::ImageBuffer::new(image_width, image_height);
 
     // World
-    let mut world = HittableList::default();
-    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+    let mut world = Arc::new(RwLock::new(HittableList::default()));
+    world
+        .write()
+        .unwrap()
+        .add(Arc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world
+        .write()
+        .unwrap()
+        .add(Arc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // Camera
     let camera = Camera::default();
@@ -58,17 +63,38 @@ fn main() {
     let start_time = std::time::Instant::now();
     log::info!("rendering started.");
 
-    img.enumerate_pixels_mut().for_each(|(x, y, pixel)| {
-        let mut pixel_color = Color::new(0.0, 0.0, 0.0);
-        for _ in 0..samples_per_pixel {
-            let u = (x as f32 + rng.gen_range(0.0, 1.0)) / (image_width - 1) as f32;
-            let v = ((image_height - y) as f32 + rng.gen_range(0.0, 1.0)) / (image_height - 1) as f32;
-            let r = camera.get_ray(u, v);
-            pixel_color += ray_color(&r, &world);
-        }
+    let world_shared = world.clone();
+    img.enumerate_pixels_mut()
+        .par_bridge()
+        .into_par_iter()
+        .for_each(|(x, y, pixel)| {
+            let mut rng = rand::thread_rng();
 
-        write_color(pixel, pixel_color, samples_per_pixel);
-    });
+            let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+            for _ in 0..samples_per_pixel {
+                let u = (x as f32 + rng.gen_range(0.0, 1.0)) / (image_width - 1) as f32;
+                let v = ((image_height - y) as f32 + rng.gen_range(0.0, 1.0))
+                    / (image_height - 1) as f32;
+                let r = camera.get_ray(u, v);
+                pixel_color += ray_color(&r, &*world_shared.read().unwrap());
+            }
+
+            write_color(pixel, pixel_color, samples_per_pixel);
+        });
+    // img.pixels_mut().par_bridge().into_par_iter()
+
+    // img.enumerate_pixels_mut().for_each(|(x, y, pixel)| {
+    //     let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+    //     for _ in 0..samples_per_pixel {
+    //         let u = (x as f32 + rng.gen_range(0.0, 1.0)) / (image_width - 1) as f32;
+    //         let v =
+    //             ((image_height - y) as f32 + rng.gen_range(0.0, 1.0)) / (image_height - 1) as f32;
+    //         let r = camera.get_ray(u, v);
+    //         pixel_color += ray_color(&r, &world);
+    //     }
+
+    //     write_color(pixel, pixel_color, samples_per_pixel);
+    // });
 
     log::info!(
         "rendering finished, took {} ms",
