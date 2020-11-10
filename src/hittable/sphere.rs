@@ -5,6 +5,12 @@ pub struct Sphere {
     radius: f32,
 }
 
+impl Sphere {
+    pub fn new(center: Point3, radius: f32) -> Self {
+        Self { center, radius }
+    }
+}
+
 impl Hittable for Sphere {
     fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
         let oc = Vec3::from(r.origin() - self.center);
@@ -30,6 +36,9 @@ impl Hittable for Sphere {
         rec.t = root;
         rec.p = r.at(rec.t);
         rec.normal = (rec.p - self.center) / self.radius;
+        let outward_normal = (rec.p - self.center) / self.radius;
+        rec.set_face_normal(r, outward_normal);
+        
         return true;
     }
 }
