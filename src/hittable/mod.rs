@@ -6,13 +6,14 @@ use crate::Ray;
 use crate::Vec3;
 
 pub use sphere::Sphere;
+pub use hittable_list::HittableList;
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct HitRecord {
-    p: Point3,
-    normal: Vec3,
-    t: f32,
-    front_face: bool,
+    pub p: Point3,
+    pub normal: Vec3,
+    pub t: f32,
+    pub front_face: bool,
 }
 
 impl HitRecord {

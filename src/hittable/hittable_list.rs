@@ -1,19 +1,20 @@
 use super::{HitRecord, Hittable};
 
-struct HittableList {
+#[derive(Default)]
+pub struct HittableList {
     objects: Vec<Box<Hittable>>,
 }
 
 impl HittableList {
-    fn new(objects: Vec<Box<Hittable>>) -> Self {
+    pub fn new(objects: Vec<Box<Hittable>>) -> Self {
         Self { objects }
     }
 
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.objects.clear();
     }
 
-    fn add(&mut self, object: Box<Hittable>) {
+    pub fn add(&mut self, object: Box<Hittable>) {
         self.objects.push(object)
     }
 }

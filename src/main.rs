@@ -1,11 +1,11 @@
 mod hittable;
 mod ray;
 
-use glam::Vec3;
+use glam::Vec3 as Vec3;
 use ray::Ray;
 use rayon::prelude::*;
 
-use hittable::Sphere;
+use hittable::{HitRecord, Hittable, HittableList, Sphere};
 
 type Color = Vec3;
 type Point3 = Vec3;
@@ -18,37 +18,31 @@ fn write_color(pixel: &mut image::Rgb<u8>, pixel_color: &Vec3) {
     ]);
 }
 
-fn ray_color(r: &ray::Ray) -> Color {
-    let t = hit_sphere(&Vec3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t > 0.0 {
-        let n = Vec3::from(r.at(t) - Vec3::new(0.0, 0.0, -1.0));
-        return 0.5 * Color::new(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
+fn ray_color(r: &ray::Ray, hittable: &dyn Hittable) -> Color {
+    let mut rec = HitRecord::default();
+    if hittable.hit(r, 0.0, std::f32::INFINITY, &mut rec) {
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
     let unit_direction = r.direction().normalize();
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    let t = unit_direction.y() + 1.0;
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
-}
-
-fn hit_sphere(center: &Vec3, radius: f32, r: &Ray) -> f32 {
-    let oc = Vec3::from(r.origin() - center.clone());
-    let a = r.direction().dot(r.direction());
-    let half_b = oc.dot(r.direction());
-    let c = oc.length_squared() - radius * radius;
-    let discriminant = half_b * half_b - a * c;
-    if discriminant < 0.0 {
-        return -1.0;
-    } else {
-        return (-half_b - discriminant.sqrt()) / a;
-    }
 }
 
 fn main() {
     env_logger::builder().format_timestamp(None).init();
 
+    // Image
     let aspect_ratio = 16.0 / 9.0;
     let image_width: u32 = 400;
     let image_height: u32 = (image_width as f32 / aspect_ratio) as u32;
+    let mut img: image::RgbImage = image::ImageBuffer::new(image_width, image_height);
 
+    // World
+    let mut world = HittableList::default();
+    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+
+    // Camera
     let viewport_height = 2.0;
     let viewport_width = aspect_ratio * viewport_height;
     let origin = Vec3::new(0.0, 0.0, 0.0);
@@ -57,8 +51,6 @@ fn main() {
     let vertical = Vec3::new(0.0, viewport_height, 0.0);
     let lower_left_corner =
         origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, focal_length);
-
-    let mut img: image::RgbImage = image::ImageBuffer::new(image_width, image_height);
 
     let start_time = std::time::Instant::now();
     log::info!("rendering started.");
@@ -70,7 +62,7 @@ fn main() {
             origin,
             lower_left_corner + u * horizontal + v * vertical - origin,
         );
-        let pixel_color = ray_color(&r);
+        let pixel_color = ray_color(&r, &world);
         write_color(pixel, &pixel_color);
     });
 
