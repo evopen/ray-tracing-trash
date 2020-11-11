@@ -1,4 +1,4 @@
-pub use glam::Vec3;
+pub use glam::Vec3A as Vec3;
 
 use rand::prelude::*;
 pub trait Random {
@@ -6,6 +6,17 @@ pub trait Random {
     fn gen_range(rng: &mut ThreadRng, min: f32, max: f32) -> Self;
     fn gen_in_unit_sphere(rng: &mut ThreadRng) -> Self;
     fn gen_unit_vector(rng: &mut ThreadRng) -> Self;
+}
+
+pub trait RayPropagation {
+    fn reflect(v: &Vec3, n: &Vec3) -> Vec3;
+}
+
+impl RayPropagation for Vec3 {
+    fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        debug_assert!(n.is_normalized());
+        return v.clone() - 2.0 * v.dot(n.clone()) * n.clone();
+    }
 }
 
 impl Random for Vec3 {

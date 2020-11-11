@@ -9,6 +9,7 @@ mod vec3;
 use rand::prelude::*;
 use ray::Ray;
 use rayon::prelude::*;
+use std::rc::Rc;
 use std::sync::{Arc, RwLock};
 use vec3::Random;
 use vec3::Vec3;
@@ -39,10 +40,9 @@ fn ray_color(r: &ray::Ray, hittable: &dyn Hittable, depth: u32, rng: &mut Thread
         return Color::new(0.0, 0.0, 0.0);
     }
 
-    let mut rec = HitRecord::default();
     if let Some(rec) = hittable.hit(r, 0.001, std::f32::INFINITY) {
-        let target = Vec3::from(rec.p + rec.normal + Vec3::gen_unit_vector(rng));
-        return 0.5 * ray_color(&Ray::new(rec.p, target - rec.p), hittable, depth - 1, rng);
+        let (attenuation, new_ray) = rec.material.scatter(r, &rec);
+        return attenuation * ray_color(&new_ray, hittable, depth - 1, rng);
     }
     let unit_direction = r.direction().normalize();
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -62,9 +62,33 @@ fn main() {
     let max_depth = 50;
 
     // World
+
+    let material_ground = Rc::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(material::Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(material::Metal::new(Vec3::new(0.8, 0.8, 0.8)));
+    let material_right = Rc::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2)));
+
     let mut world = HittableList::default();
-    world.add(Box::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
+    world.add(Box::new(Sphere::new(
+        Point3::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
+    world.add(Box::new(Sphere::new(
+        Point3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    )));
 
     // Camera
     let camera = Camera::default();

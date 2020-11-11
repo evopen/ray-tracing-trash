@@ -1,17 +1,21 @@
 mod hittable_list;
 mod sphere;
 
+use std::rc::Rc;
+
 use crate::Point3;
 use crate::Ray;
 use crate::Vec3;
+use crate::material::Material;
 
 pub use sphere::Sphere;
 pub use hittable_list::HittableList;
 
-#[derive(Debug, Default, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub material: Rc<dyn Material>,
     pub t: f32,
     pub front_face: bool,
 }
