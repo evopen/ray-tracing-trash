@@ -1,11 +1,9 @@
 use super::{HitRecord, Hittable};
 
-
 #[derive(Default)]
 pub struct HittableList {
     objects: Vec<Box<dyn Hittable>>,
 }
-
 
 impl HittableList {
     pub fn new(objects: Vec<Box<dyn Hittable>>) -> Self {
@@ -22,18 +20,16 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32, hit_record: &mut HitRecord) -> bool {
+    fn hit(&self, r: &crate::ray::Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut closest_so_far = t_max;
-        let mut hit_anything = false;
-        let mut temp_rec = HitRecord::default();
+        let mut hit_record = None;
 
         for object in &self.objects {
-            if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = hit_record.t;
-                *hit_record = temp_rec;
+            if let Some(temp_rec) = object.hit(r, t_min, closest_so_far) {
+                closest_so_far = temp_rec.t;
+                hit_record = Some(temp_rec);
             }
         }
-        return hit_anything;
+        return hit_record;
     }
 }

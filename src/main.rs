@@ -2,6 +2,7 @@
 
 mod camera;
 mod hittable;
+mod material;
 mod ray;
 mod vec3;
 
@@ -39,7 +40,7 @@ fn ray_color(r: &ray::Ray, hittable: &dyn Hittable, depth: u32, rng: &mut Thread
     }
 
     let mut rec = HitRecord::default();
-    if hittable.hit(r, 0.001, std::f32::INFINITY, &mut rec) {
+    if let Some(rec) = hittable.hit(r, 0.001, std::f32::INFINITY) {
         let target = Vec3::from(rec.p + rec.normal + Vec3::gen_unit_vector(rng));
         return 0.5 * ray_color(&Ray::new(rec.p, target - rec.p), hittable, depth - 1, rng);
     }
