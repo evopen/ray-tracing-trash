@@ -1,10 +1,11 @@
-pub use glam::Vec3 as Vec3;
+pub use glam::Vec3;
 
 use rand::prelude::*;
 pub trait Random {
     fn gen(rng: &mut ThreadRng) -> Self;
     fn gen_range(rng: &mut ThreadRng, min: f32, max: f32) -> Self;
     fn gen_in_unit_sphere(rng: &mut ThreadRng) -> Self;
+    fn gen_unit_vector(rng: &mut ThreadRng) -> Self;
 }
 
 impl Random for Vec3 {
@@ -29,6 +30,10 @@ impl Random for Vec3 {
                 return p;
             }
         }
+    }
+
+    fn gen_unit_vector(rng: &mut ThreadRng) -> Self {
+        Vec3::gen_in_unit_sphere(rng).normalize()
     }
 }
 
