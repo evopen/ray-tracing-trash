@@ -15,10 +15,10 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r: &Ray, rec: &HitRecord) -> (Attenuation, Ray) {
+    fn scatter(&self, r: &Ray, rec: &HitRecord) -> Option<(Attenuation, Ray)> {
         let mut rng = rand::thread_rng();
         let scatter_direction = rec.normal + Vec3::gen_unit_vector(&mut rng);
         let ray = Ray::new(rec.p, rec.normal + scatter_direction);
-        return (self.albedo, ray);
+        return Some((self.albedo, ray));
     }
 }

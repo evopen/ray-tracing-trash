@@ -41,8 +41,11 @@ fn ray_color(r: &ray::Ray, hittable: &dyn Hittable, depth: u32, rng: &mut Thread
     }
 
     if let Some(rec) = hittable.hit(r, 0.001, std::f32::INFINITY) {
-        let (attenuation, new_ray) = rec.material.scatter(r, &rec);
-        return attenuation * ray_color(&new_ray, hittable, depth - 1, rng);
+        if let Some((attenuation, new_ray)) = rec.material.scatter(r, &rec) {
+            return attenuation * ray_color(&new_ray, hittable, depth - 1, rng);
+        } else {
+            return Color::new(0.0, 0.0, 0.0);
+        }
     }
     let unit_direction = r.direction().normalize();
     let t = 0.5 * (unit_direction.y() + 1.0);
@@ -65,8 +68,8 @@ fn main() {
 
     let material_ground = Rc::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0)));
     let material_center = Rc::new(material::Lambertian::new(Vec3::new(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(material::Metal::new(Vec3::new(0.8, 0.8, 0.8)));
-    let material_right = Rc::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2)));
+    let material_left = Rc::new(material::Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.3));
+    let material_right = Rc::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0));
 
     let mut world = HittableList::default();
     world.add(Box::new(Sphere::new(
