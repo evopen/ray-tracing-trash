@@ -1,7 +1,9 @@
+mod dielectric;
 mod lambertian;
 mod metal;
 
 use crate::{Color, HitRecord, Ray, Vec3};
+pub use dielectric::Dielectric;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
 
