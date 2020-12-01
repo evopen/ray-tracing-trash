@@ -45,7 +45,7 @@ fn ray_color(r: &ray::Ray, hittable: &dyn Hittable, depth: u32, rng: &mut Thread
         return attenuation * ray_color(&new_ray, hittable, depth - 1, rng);
     }
     let unit_direction = r.direction().normalize();
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
