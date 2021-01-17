@@ -14,12 +14,22 @@ pub trait Random {
 
 pub trait RayPropagation {
     fn reflect(v: &Vec3, n: &Vec3) -> Vec3;
+
+    fn refract(uv: &Vec3, n: &Vec3, eta: f32) -> Vec3;
 }
 
 impl RayPropagation for Vec3 {
     fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
         debug_assert!(n.is_normalized());
         return v.clone() - 2.0 * v.dot(n.clone()) * n.clone();
+    }
+
+    fn refract(uv: &Vec3, n: &Vec3, eta: f32) -> Vec3 {
+        let cos_theta = -uv.dot(n.clone()).min(1.0);
+        let r_out_perp = eta * Vec3::from(uv.clone() + Vec3::from(cos_theta * n.clone()));
+        let r_out_parallel =
+            Vec3::from(-(1.0 - r_out_perp.length_squared()).abs().sqrt() * n.clone());
+        return r_out_perp + r_out_parallel;
     }
 }
 
