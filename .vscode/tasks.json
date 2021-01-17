@@ -10,11 +10,11 @@
 			"label": "rust: cargo run debug",
 			"env": {
 				"RUST_LOG": "ray_tracing,error",
-				"RUST_BACKTRACE": "1",
+				"RUST_BACKTRACE": "1"
 			},
 			"presentation": {
 				"clear": true
-			},
+			}
 		},
 		{
 			"type": "cargo",
@@ -32,6 +32,6 @@
 			"presentation": {
 				"clear": true
 			}
-		}
+		},
 	]
 }

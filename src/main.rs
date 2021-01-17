@@ -48,7 +48,7 @@ fn ray_color(r: &ray::Ray, hittable: &dyn Hittable, depth: u32, rng: &mut Thread
         }
     }
     let unit_direction = r.direction().normalize();
-    let t = 0.5 * (unit_direction.y() + 1.0);
+    let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }
 
@@ -102,9 +102,9 @@ fn main() {
     img.enumerate_pixels_mut().for_each(|(x, y, pixel)| {
         let mut pixel_color = Color::new(0.0, 0.0, 0.0);
         for _ in 0..samples_per_pixel {
-            let u = (x as f32 + rng.gen_range(0.0, 1.0)) / (image_width - 1) as f32;
+            let u = (x as f32 + rng.gen_range(0.0..1.0)) / (image_width - 1) as f32;
             let v =
-                ((image_height - y) as f32 + rng.gen_range(0.0, 1.0)) / (image_height - 1) as f32;
+                ((image_height - y) as f32 + rng.gen_range(0.0..1.0)) / (image_height - 1) as f32;
             let r = camera.get_ray(u, v);
             pixel_color += ray_color(&r, &world, max_depth, &mut rng);
         }

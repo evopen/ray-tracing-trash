@@ -1,11 +1,15 @@
 pub use glam::Vec3A as Vec3;
 
+use glam::const_vec3a;
 use rand::prelude::*;
+
+const MAX_U64: f32 = std::u64::MAX as f32;
+
 pub trait Random {
-    fn gen(rng: &mut ThreadRng) -> Self;
-    fn gen_range(rng: &mut ThreadRng, min: f32, max: f32) -> Self;
-    fn gen_in_unit_sphere(rng: &mut ThreadRng) -> Self;
-    fn gen_unit_vector(rng: &mut ThreadRng) -> Self;
+    fn gen() -> Self;
+    fn gen_range(rnmin: f32, max: f32) -> Self;
+    fn gen_in_unit_sphere() -> Self;
+    fn gen_unit_vector() -> Self;
 }
 
 pub trait RayPropagation {
@@ -19,22 +23,33 @@ impl RayPropagation for Vec3 {
     }
 }
 
+pub fn random() -> u64 {
+    unsafe {
+        static mut STATE: u64 = 0x123456789abcdef0;
+        STATE = STATE
+            .wrapping_mul(2862933555777941757)
+            .wrapping_add(3037000493);
+        STATE
+    }
+}
+
 impl Random for Vec3 {
-    fn gen(rng: &mut ThreadRng) -> Self {
-        Vec3::gen_range(rng, 0.0, 1.0)
+    fn gen() -> Self {
+        Vec3::gen_range(0.0, 1.0)
     }
 
-    fn gen_range(rng: &mut ThreadRng, min: f32, max: f32) -> Self {
-        Vec3::new(
-            rng.gen_range(min, max),
-            rng.gen_range(min, max),
-            rng.gen_range(min, max),
-        )
+    fn gen_range(min: f32, max: f32) -> Self {
+        let max_u64: Vec3 = Vec3::new(MAX_U64, MAX_U64, MAX_U64);
+        let range = max - min;
+        let x = random() as f32;
+        let y = random() as f32;
+        let z = random() as f32;
+        Vec3::new(x, y, z) / max_u64 * Vec3::new(range, range, range) + Vec3::new(min, min, min)
     }
 
-    fn gen_in_unit_sphere(rng: &mut ThreadRng) -> Self {
+    fn gen_in_unit_sphere() -> Self {
         loop {
-            let p = Vec3::gen(rng);
+            let p = Vec3::gen();
             if p.length_squared() >= 1.0 {
                 continue;
             } else {
@@ -43,8 +58,8 @@ impl Random for Vec3 {
         }
     }
 
-    fn gen_unit_vector(rng: &mut ThreadRng) -> Self {
-        Vec3::gen_in_unit_sphere(rng).normalize()
+    fn gen_unit_vector() -> Self {
+        Vec3::gen_in_unit_sphere().normalize()
     }
 }
 

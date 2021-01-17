@@ -11,8 +11,8 @@ image = "0.23.11"
 log = "0.4.11"
 env_logger = "0.8.1"
 rayon = "1.5.0"
-glam = "0.10.0"
-rand = { version = "0.7.3", features = ["small_rng"] }
+glam = "0.12.0"
+rand = { version = "0.8.2", features = ["small_rng"] }
 
 [profile.dev]
 opt-level = 0
